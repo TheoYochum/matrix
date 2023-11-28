@@ -1,6 +1,7 @@
 from fractions import *
 from decimal import Decimal
 import math
+import copy
 
 variables = {}
 header = ""
@@ -9,7 +10,7 @@ def main():
   global header
   print("\033[2J", end="")
   move_cursor(1,1)
-  variables['A'] = [[2, 7], [1, 9]]
+  variables['A'] = [[Fraction(2), Fraction(7)], [Fraction(1), Fraction(9)]]
   while True:
     header = ""
     print("What would you like to do?")
@@ -27,6 +28,10 @@ def main():
         call_inverse()
       case "determinant":
         call_det()
+      case "laplace":
+        call_laplace_det()
+      case "det inverse":
+        call_det_inverse()
       case "help":
         help()
       case "exit":
@@ -426,6 +431,96 @@ def determinant(matrix):
   if (len(pivots) != len(matrix)):
     return 0
   return 1/det
+
+def call_laplace_det():
+  print("Enter the matrix name: ")
+  name = input()
+  matrix = variables[name]
+  print(laplace_det(matrix))
+
+def laplace_det(matrix):
+  return laplace_det_recurse(matrix, [])
+
+def laplace_det_recurse(matrix, exclude):
+  height = len(exclude)
+  cols = len(matrix)
+  rows = len(matrix[0])
+  if (cols != rows):
+    print("Not a square matrix")
+    return
+  if (height == cols - 1):
+    for col in range(cols):
+      if (not col in exclude):
+        return matrix[col][height]
+  det = 0
+  sign = 1
+  for col in range(cols):
+    if (not col in exclude):
+      new_exclude = copy.copy(exclude)
+      new_exclude.append(col)
+      det += sign * matrix[col][height] * laplace_det_recurse(matrix, new_exclude)
+      sign *= -1
+  return det
+
+def transpose(matrix):
+  cols = len(matrix)
+  rows = len(matrix[0])
+  out = []
+  for col in range(rows):
+    out.append([])
+    for row in range(cols):
+      out[col].append(matrix[row][col])
+  return out
+
+def cofactor(matrix):
+  cols = len(matrix)
+  rows = len(matrix[0])
+  out = []
+  for col in range(cols):
+    out.append([])
+    for row in range(rows):
+      out[col].append(cofactor_helper(matrix, col, row))
+  return out
+
+def cofactor_helper(matrix, col_index, row_index):
+  cols = len(matrix)
+  rows = len(matrix[0])
+  out = []
+  col_offset = 0
+  if (col_index % 2 == 0 ^ row_index % 2):
+    sign = 1
+  else:
+    sign = -1
+  for col in range(cols):
+    if (col != col_index):
+      out.append([])
+      for row in range(rows):
+        if (row != row_index):
+          out[col + col_offset].append(matrix[col][row])
+    else:
+      col_offset = -1
+  return laplace_det(out) * sign
+
+
+def adjoint(matrix):
+  return transpose(cofactor(matrix))
+
+def det_inverse(matrix):
+  matrix = copy.deepcopy(matrix)
+  det = Fraction(laplace_det(matrix))
+  matrix = adjoint(matrix)
+  cols = len(matrix)
+  rows = len(matrix[0])
+  for col in range(cols):
+    for row in range(rows):
+      matrix[col][row] = matrix[col][row] / det
+  return matrix
+
+def call_det_inverse():
+  print("Enter the matrix name: ")
+  name = input()
+  matrix = variables[name]
+  print(print_matrix(det_inverse(matrix)))
 
 def help():
   out = '''Commands:
