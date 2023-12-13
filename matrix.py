@@ -45,6 +45,20 @@ def list_variables():
     print(f"Name: {item[0]}")
     print(f"Value:\n{to_string(item[1])}")
 
+def get_variable():
+  name = input()
+  out = copy.deepcopy(variables[name])
+  return out
+
+def save_variable(variable):
+  print("Would you like to save this variable? y/n")
+  answer = input().lower()
+  if (not (answer == 'y' or answer == 'yes')):
+    return
+  print("Give it a name")
+  name = input()
+  variables[name] = variable
+
 def to_string(item):
   out = ""
   if (type(item) == list):
@@ -280,16 +294,10 @@ def row_sum(matrix, r1, r2, scalar):
 
 def call_RREF():
   print("Enter the matrix name: ")
-  name = input()
-  old_matrix = variables[name]
-  matrix = []
-  cols = len(old_matrix)
-  rows = len(old_matrix[0])
-  for col in range(cols):
-    matrix.append([])
-    for row in range(rows):
-      matrix[col].append(old_matrix[col][row])
-  print(print_matrix(RREF(old_matrix)))
+  matrix = get_variable()
+  matrix = RREF(matrix)
+  print(print_matrix(matrix))
+  save_variable(matrix)
 
 def RREF(matrix):
   cols = len(matrix)
@@ -329,6 +337,13 @@ def RREF(matrix):
         matrix = row_sum(matrix, row, newrow, matrix[col][newrow] * -1)
   return matrix
 
+def call_identity():
+  print("How big is n (nxn): ")
+  size = input()
+  matrix = identity(size)
+  print(print_matrix(matrix))
+  save_variable(matrix)
+
 def identity(n):
   matrix = []
   for col in range(n):
@@ -339,6 +354,15 @@ def identity(n):
       else:
         matrix[col].append(Fraction(0))
   return matrix
+
+def call_augment():
+  print("Enter the first matrix's name: ")
+  matrix1 = get_variable()
+  print("Enter the secon matrix's name: ")
+  matrix2 = get_variable()
+  matrix = augment(matrix1, matrix2)
+  print(print_matrix(matrix))
+  save_variable(matrix)
 
 def augment(matrix1, matrix2):
   matrix = []
@@ -359,13 +383,18 @@ def augment(matrix1, matrix2):
 
 def call_inverse():
   print("Enter the matrix name: ")
-  name = input()
-  matrix = variables[name]
-  print(print_matrix(inverse(matrix)))
+  matrix = get_variable()
+  matrix = inverse(matrix)
+  print(print_matrix(matrix))
+  save_variable(matrix)
 
 def inverse(matrix):
   if (len(matrix) != len(matrix[0])):
     print("Not a square matrix")
+    return
+  det = Fraction(laplace_det(matrix))
+  if (det == 0):
+    print("Matrix is not invertible")
     return
   augmented = augment(matrix, identity(len(matrix)))
   reduced = RREF(augmented)
@@ -378,16 +407,10 @@ def inverse(matrix):
 
 def call_det():
   print("Enter the matrix name: ")
-  name = input()
-  old_matrix = variables[name]
-  matrix = []
-  cols = len(old_matrix)
-  rows = len(old_matrix[0])
-  for col in range(cols):
-    matrix.append([])
-    for row in range(rows):
-      matrix[col].append(old_matrix[col][row])
-  print(determinant(old_matrix))
+  matrix = get_variable()
+  det = determinant(matrix)
+  print(det)
+  save_variable(det)
 
 def determinant(matrix):
   cols = len(matrix)
@@ -434,9 +457,10 @@ def determinant(matrix):
 
 def call_laplace_det():
   print("Enter the matrix name: ")
-  name = input()
-  matrix = variables[name]
-  print(laplace_det(matrix))
+  matrix = get_variable()
+  det = laplace_det(matrix)
+  print(det)
+  save_variable(det)
 
 def laplace_det(matrix):
   return laplace_det_recurse(matrix, [])
@@ -462,6 +486,13 @@ def laplace_det_recurse(matrix, exclude):
       sign *= -1
   return det
 
+def call_transpose():
+  print("Enter the matrix name: ")
+  matrix = get_variable()
+  matrix = transpose(matrix)
+  print(print_matrix(matrix))
+  save_variable(matrix)
+
 def transpose(matrix):
   cols = len(matrix)
   rows = len(matrix[0])
@@ -471,6 +502,13 @@ def transpose(matrix):
     for row in range(cols):
       out[col].append(matrix[row][col])
   return out
+
+def call_cofactor():
+  print("Enter the matrix name: ")
+  matrix = get_variable()
+  matrix = cofactor(matrix)
+  print(print_matrix(matrix))
+  save_variable(matrix)
 
 def cofactor(matrix):
   cols = len(matrix)
@@ -501,13 +539,29 @@ def cofactor_helper(matrix, col_index, row_index):
       col_offset = -1
   return laplace_det(out) * sign
 
+def call_adjoint():
+  print("Enter the matrix name: ")
+  matrix = get_variable()
+  matrix = adjoint(matrix)
+  print(print_matrix(matrix))
+  save_variable(matrix)
 
 def adjoint(matrix):
   return transpose(cofactor(matrix))
 
+def call_det_inverse():
+  print("Enter the matrix name: ")
+  matrix = get_variable()
+  det = det_inverse(matrix)
+  print(print_matrix(det))
+  save_variable(det)
+
 def det_inverse(matrix):
   matrix = copy.deepcopy(matrix)
   det = Fraction(laplace_det(matrix))
+  if (det == 0):
+    print("Matrix is not invertible")
+    return
   matrix = adjoint(matrix)
   cols = len(matrix)
   rows = len(matrix[0])
@@ -515,12 +569,6 @@ def det_inverse(matrix):
     for row in range(rows):
       matrix[col][row] = matrix[col][row] / det
   return matrix
-
-def call_det_inverse():
-  print("Enter the matrix name: ")
-  name = input()
-  matrix = variables[name]
-  print(print_matrix(det_inverse(matrix)))
 
 def help():
   out = '''Commands:
